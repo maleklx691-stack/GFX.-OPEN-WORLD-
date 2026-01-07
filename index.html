@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>GFX OPEN WORLD</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<style>
+body{margin:0;overflow:hidden;background:black}
+#ui{
+position:fixed;top:10px;left:10px;
+color:white;background:rgba(0,0,0,.5);
+padding:8px;border-radius:8px;font-family:sans-serif
+}
+.btn{
+position:fixed;bottom:20px;width:60px;height:60px;
+background:rgba(255,255,255,.2);color:white;
+text-align:center;line-height:60px;
+border-radius:50%;font-size:22px;user-select:none
+}
+#up{left:80px;bottom:100px}
+#down{left:80px;bottom:20px}
+#left{left:20px;bottom:60px}
+#right{left:140px;bottom:60px}
+</style>
+</head>
+
+<body>
+<div id="ui">GFX OPEN WORLD</div>
+
+<div class="btn" id="up">↑</div>
+<div class="btn" id="down">↓</div>
+<div class="btn" id="left">←</div>
+<div class="btn" id="right">→</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.155/build/three.min.js"></script>
+<script>
+let scene=new THREE.Scene();
+scene.background=new THREE.Color(0x87ceeb);
+
+let camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,0.1,1000);
+let renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth,innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// light
+scene.add(new THREE.HemisphereLight(0xffffff,0x444444,1));
+
+// ground
+let ground=new THREE.Mesh(
+new THREE.PlaneGeometry(300,300),
+new THREE.MeshStandardMaterial({color:0x2e8b57})
+);
+ground.rotation.x=-Math.PI/2;
+scene.add(ground);
+
+// PLAYER IMAGE CHARACTER
+let texture=new THREE.TextureLoader().load("player.png");
+let player=new THREE.Mesh(
+new THREE.PlaneGeometry(2,3),
+new THREE.MeshStandardMaterial({map:texture,transparent:true})
+);
+player.position.y=1.5;
+scene.add(player);
+
+// NPC
+for(let i=0;i<8;i++){
+let npc=new THREE.Mesh(
+new THREE.BoxGeometry(1,2,1),
+new THREE.MeshStandardMaterial({color:0xff0000})
+);
+npc.position.set(
+(Math.random()-0.5)*80,
+1,
+(Math.random()-0.5)*80
+);
+scene.add(npc);
+}
+
+// movement
+let move={up:false,down:false,left:false,right:false};
+["up","down","left","right"].forEach(id=>{
+document.getElementById(id).ontouchstart=()=>move[id]=true;
+document.getElementById(id).ontouchend=()=>move[id]=false;
+});
+
+function animate(){
+requestAnimationFrame(animate);
+
+let speed=0.15;
+if(move.up) player.position.z-=speed;
+if(move.down) player.position.z+=speed;
+if(move.left) player.position.x-=speed;
+if(move.right) player.position.x+=speed;
+
+// always face camera
+player.lookAt(camera.position);
+
+// camera follow
+camera.position.lerp(
+new THREE.Vector3(
+player.position.x,
+player.position.y+6,
+player.position.z+10
+),0.1);
+camera.lookAt(player.position);
+
+renderer.render(scene,camera);
+}
+animate();
+
+window.onresize=()=>{
+camera.aspect=innerWidth/innerHeight;
+camera.updateProjectionMatrix();
+renderer.setSize(innerWidth,innerHeight);
+};
+</script>
+</body>
+</html>
